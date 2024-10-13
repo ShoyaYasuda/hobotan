@@ -1,51 +1,18 @@
-## インストール
+## 概要
+
+GPU利用を前提としています。別途Pytorchをインストールしておいてください。
+v0.1.0でメモリオーバー対策をしました。324量子ビットの8次式での動作を確認しています。
+
+## インストール・アップデート
 ```
 pip install -U git+https://github.com/ShoyaYasuda/hobotan
 ```
 
-## サンプルコード（CPU利用）
-
-以下は基本的なコード。
-
-```python
-from hobotan import *
-
-#量子ビットを用意
-q = symbols_list(50, 'q{}')
-
-#式
-H = (q[0] + q[10] + q[20] + q[30] + q[40] - 5)**2 - 20*q[0]*q[10] - 10*q[0]*q[10]*q[20] + 5*q[10]*q[20]*q[30]*q[40]
-
-#HOBOテンソルにコンパイル
-hobo, offset = Compile(H).get_hobo()
-print(f'offset\n{offset}')
-
-#サンプラー選択（乱数シード固定）
-solver = sampler.SASampler(seed=0)
-            
-#サンプリング（100回）
-result = solver.run(hobo, shots=100)
-
-#結果
-for r in result:
-    print(r)
-    arr, subs = Auto_array(r[0]).get_ndarray('q{}')
-    print(arr)
-```
-```
-offset
-25.0
-[{'q0': 1, 'q10': 1, 'q20': 1, 'q30': 0, 'q40': 1}, -54.0, 23]
-[1 1 1 0 1]
-[{'q0': 1, 'q10': 1, 'q20': 1, 'q30': 1, 'q40': 0}, -54.0, 77]
-[1 1 1 1 0]
-```
-
-## サンプルコード（GPU利用）
+## サンプルコード1
 
 量子ビットは2次元配列で定義でき、定式化でq[0, 0]のように使用できる。（3次元もできるよ）
 
-MIKASAmpler()はGPUを使用（別途pytorchをインストールしておくこと）。shots=10000に増やしても遅くなりにくいのが特徴。
+MIKASAmpler()を使用（別途pytorchをインストールしておくこと）。shots=10000のように増やせる。
 
 以下のコードは、5✕5の席にできるだけ多くの生徒を座らせる（ただし縦・横に3席連続で座ってはいけない）を解いたもの。3次の項が登場する。
 
@@ -84,7 +51,6 @@ solver = sampler.MIKASAmpler()
 
 #サンプリング
 result = solver.run(hobo, shots=10000)
-#result = solver.run(hobo, shots=10000, use_ttd=True) #TT分解を使用
 
 #上位3件
 for r in result[:3]:
@@ -129,7 +95,7 @@ Energy -17.0, Occurrence 496
 <img src="https://github.com/ShoyaYasuda/hobotan/blob/main/img/img3.png" width="%">
 
 
-## サンプルコード（GPU利用）
+## サンプルコード2
 
 以下のコードはx^2+y^2=z^2を満たすピタゴラス数（x, y, zとも1～16）を求めたもの。4次の項が登場する。
 
@@ -145,7 +111,7 @@ z = symbols_nbit(0, 16, 'z{}', num=4) + 1
 H = (x**2 + y**2 - z**2)**2
 
 #HOBOテンソルにコンパイル
-hobo, offset = Compile(H).get_hobo()
+hobo, offset = Compile(H,).get_hobo()
 print(f'offset\n{offset}')
 
 #サンプラー選択
@@ -153,7 +119,6 @@ solver = sampler.MIKASAmpler()
 
 #サンプリング
 result = solver.run(hobo, shots=10000)
-#result = solver.run(hobo, shots=10000, use_ttd=True) #TT分解を使用
 
 #上位10件
 for r in result[:10]:
@@ -236,6 +201,7 @@ derwindさん（理論）、yuminさん（マネージャー）、Shoya Yasuda�
 ## 更新履歴
 |日付|ver|内容|
 |:---|:---|:---|
+|2024/10/13|0.1.0|メモリオーバー対策、余計な要素を削除|
 |2024/07/28|0.0.8|TT分解オプションを追加（未検証）|
 |2024/07/27|0.0.7|exec(command)を解除|
 |2024/07/27|0.0.6|compileのミスを修正|
