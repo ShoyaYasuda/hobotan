@@ -240,6 +240,16 @@ class MIKASAmpler:
         #共通後処理
         result = get_result(pool, score, index_map)
         
+        #メモリクリア
+        del indices
+        del values
+        del values2
+        del flip_mask
+        del single_flip_mask
+        del pool
+        del score
+        torch.cuda.empty_cache()
+        
         return result
 
 
