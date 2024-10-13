@@ -178,7 +178,7 @@ class MIKASAmpler:
             if count % 10 == 0:
                 print('.', end='')
                 if count % 100 == 0:
-                    print(f' {count}/{T_num}')
+                    print(f' {count}/{T_num} Energy={min(score)}')
             count += 1
             
             pool2 = pool.clone()
