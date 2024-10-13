@@ -178,7 +178,7 @@ class MIKASAmpler:
             if count % 10 == 0:
                 print('.', end='')
                 if count % 100 == 0:
-                    print(f' {count}/{T_num} Energy={min(score)}')
+                    print(f' {count}/{T_num} min={min(score)} mean={torch.mean(score)}')
             count += 1
             
             pool2 = pool.clone()
@@ -193,6 +193,12 @@ class MIKASAmpler:
     
             # 更新マスク
             update_mask = score2 < score
+            
+            #ランダムにマスクをひっくり返す
+            rate = max(0, 0.3 * (T_num - count) / T_num) # 0.3から下げていく
+            weight = [1 - rate, rate]
+            m = nr.choice([0, 1], N, p=weight)
+            update_mask[m] = ~update_mask[m]
     
             # 更新
             pool[update_mask] = pool2[update_mask]
