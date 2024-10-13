@@ -175,9 +175,9 @@ class MIKASAmpler:
         count = 1
         for fm in flip_mask:
             
-            if count % 10 == 0:
+            if self.verbose > 0 and count % (shots//10) == 0:
                 print('.', end='')
-                if count % 100 == 0:
+                if count % shots == 0:
                     print(f' {count}/{T_num} min={min(score)} mean={torch.mean(score)}')
             count += 1
             
@@ -195,9 +195,9 @@ class MIKASAmpler:
             update_mask = score2 < score
             
             #ランダムにマスクをひっくり返す
-            rate = max(0, 0.3 * (T_num - count) / T_num) # 0.3から下げていく
+            rate = max(0, 0.2 * (T_num - count) / T_num) # 0.2から下げていく
             weight = [1 - rate, rate]
-            m = nr.choice([0, 1], N, p=weight)
+            m = nr.choice([0, 1], shots, p=weight)
             update_mask[m] = ~update_mask[m]
     
             # 更新
