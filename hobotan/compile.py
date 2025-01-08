@@ -78,7 +78,7 @@ class Compile:
                 # ['q3', 'q4', 'q1', 'q2']
                 if len(texts) > ho:
                     ho = len(texts)
-            # print(ho)
+            print(f'tensor order = {ho}')
             
             # #もう一度同類項をまとめる
             # expr = symengine.expand(expr)
