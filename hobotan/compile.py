@@ -39,58 +39,81 @@ class Compile:
         if 'symengine.lib' in str(type(self.expr)):
             #式を展開して同類項をまとめる
             expr = symengine.expand(self.expr)
-            # print('expr')
+            # print(expr)
             
-            #二乗項を一乗項に変換
-            expr = replace_function(expr, lambda e: isinstance(e, symengine.Pow) and e.exp == 2, lambda e, *args: e)
+            '''
+            ステップ1
+            二乗項を一乗項に変換すると相殺される項があるので、その前に
+            最高次数を調べる、オフセットを調べる、使用されているシンボルを記録しておく
+            '''
+            #項と係数の辞書
+            coeff_dict = expr.as_coefficients_dict()
+            # print(coeff_dict)
             
-            #最高字数を調べながらオフセットを記録
-            #項に分解
-            members = str(expr).split(' ')
+            #
+            symbols = set() #使用されている項リスト
+            offset = 0 #オフセット
+            ho = 0 #最高次数
             
             #各項をチェック
-            offset = 0
-            ho = 0
-            for member in members:
-                # print(member)
+            for key in coeff_dict.keys():
+                # print(key)
                 #数字単体ならオフセット
-                try:
-                    offset += float(member) #エラーなければ数字
-                    # print('continue')
+                if key.is_Number:
+                    offset = coeff_dict[key]
                     continue
-                except:
-                    pass
-                #'*'で分解
-                texts = member.split('*')
-                #係数を取り除く
-                try:
-                    texts[0] = re.sub(r'[()]', '', texts[0]) #'(5/2)'みたいなのも来る
-                    # print(texts[0])
-                    float(Rational(texts[0])) #分数も対応 #エラーなければ係数あり
-                    texts = texts[1:]
-                except:
-                    # print('err')
-                    pass
-                
-                #最高次数の計算
-                # ['-']
-                # ['q2']
-                # ['q3', 'q4', 'q1', 'q2']
-                if len(texts) > ho:
-                    ho = len(texts)
+                #最高次数チェック
+                ho = max(sum(1 for arg in key.args if arg.is_Symbol), ho)
+                #使用されている項（ただし二乗項は一乗項に変換しておく）
+                symbols.add(replace_function(key, lambda e: isinstance(e, symengine.Pow) and e.exp == 2, lambda e, *args: e))
+            
+            #項リストから定数を意味する1を削除
+            symbols.discard(1) #存在しなくてもエラーにならない
+            
+            # print(symbols)
+            # print(offset)
             print(f'tensor order = {ho}')
+            
+            '''
+            ステップ2
+            二乗項を一乗項に変換する
+            '''
+            #二乗項を一乗項に変換（ここで相殺される項がある）
+            expr = replace_function(expr, lambda e: isinstance(e, symengine.Pow) and e.exp == 2, lambda e, *args: e)
+            # print(expr)
             
             # #もう一度同類項をまとめる
             # expr = symengine.expand(expr)
             # print('expr')
-    
-            #文字と係数の辞書
-            coeff_dict = expr.as_coefficients_dict()
-            # print(len(coeff_dict))
             
-            #定数項を消す　{1: 25} 必ずある
-            del coeff_dict[1]
-            # print('del')
+            #定数項を消す
+            expr -= offset
+            # print(expr)
+            
+            '''
+            合流
+            '''
+            #項と係数の辞書
+            coeff_dict = expr.as_coefficients_dict()
+            
+            # print(len(coeff_dict))
+            # print(coeff_dict)
+            
+            #ここで、二乗項を一乗項に変換したときに消えた項を係数0で戻す
+            for key in symbols:
+                if key not in coeff_dict.keys():
+                    coeff_dict[key] = 0
+            # print(coeff_dict)
+            
+            #定数項を消す、項がない場合{1: 0}が残っているため
+            try:
+                del coeff_dict[0] #{0: 1}が残っている場合（たぶんバグ）
+            except:
+                pass
+            try:
+                del coeff_dict[1] #{1: 0}が残っている場合
+            except:
+                pass
             # print(coeff_dict)
             
             #シンボル対応表
@@ -106,6 +129,7 @@ class Compile:
             # print(tmp)
             # print('tmp')
             keys = list(set(tmp))
+            # print(keys)
             # print(len(keys))
             
             # 要素のソート（ただしアルファベットソート）

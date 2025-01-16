@@ -13,6 +13,8 @@ def get_result(pool, score, index_map):
     unique_pool, original_index, unique_counts = np.unique(pool, axis=0, return_index=True, return_counts=True)
     #print(unique_pool, original_index, unique_counts)
     
+    
+    
     #エネルギーもユニークに集計
     unique_energy = score[original_index]
     #print(unique_energy)
@@ -25,7 +27,7 @@ def get_result(pool, score, index_map):
     
     #結果リスト
     result = [[dict(zip(index_map.keys(), unique_pool[i])), unique_energy[i], unique_counts[i]] for i in range(len(unique_pool))]
-    #print(result)
+    # print(result)
     
     return result
 
