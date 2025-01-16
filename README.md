@@ -4,6 +4,8 @@ GPU利用を前提としています。別途Pytorchをインストールして�
 
 v0.1.0でメモリオーバー対策をしました（できてるか？）。324量子ビットの8次式での動作を確認しています。
 
+追記：12次式の動作も確認しました。[パズルを解いた記事](https://vigne-cla.com/?s=%EF%BC%88HOBO%EF%BC%89) もご参照ください。 
+
 ## インストール・アップデート
 ```
 pip install -U git+https://github.com/ShoyaYasuda/hobotan
