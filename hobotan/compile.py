@@ -37,7 +37,7 @@ class Compile:
         """
         #symengine型のサブクラス
         if 'symengine.lib' in str(type(self.expr)):
-            #式を展開して同類項をまとめる
+            #式を展開して浅い同類項をまとめる
             expr = symengine.expand(self.expr)
             # print(expr)
             
@@ -51,9 +51,9 @@ class Compile:
             # print(coeff_dict)
             
             #
-            symbols = set() #使用されている項リスト
+            symbols = set() #使用されている項リスト（二乗は一乗に戻すが、文字のかけ算は残ったもの）
             offset = 0 #オフセット
-            ho = 0 #最高次数
+            ho = 0 #最高次数（二乗は一乗に戻すが、文字のかけ算は残ったもの、の次数）
             
             #各項をチェック
             for key in coeff_dict.keys():
@@ -62,10 +62,13 @@ class Compile:
                 if key.is_Number:
                     offset = coeff_dict[key]
                     continue
+                #二乗を一乗に戻す
+                key2 = replace_function(key, lambda e: isinstance(e, symengine.Pow) and e.exp == 2, lambda e, *args: e)
+                # print(key2)
+                #使用されている項（二乗は一乗に戻すが、文字のかけ算は残ったもの）
+                symbols.add(key2)
                 #最高次数チェック
-                ho = max(sum(1 for arg in key.args if arg.is_Symbol), ho)
-                #使用されている項（ただし二乗項は一乗項に変換しておく）
-                symbols.add(replace_function(key, lambda e: isinstance(e, symengine.Pow) and e.exp == 2, lambda e, *args: e))
+                ho = max(sum(1 for arg in key2.args if arg.is_Symbol), ho)
             
             #項リストから定数を意味する1を削除
             symbols.discard(1) #存在しなくてもエラーにならない
@@ -234,3 +237,19 @@ class Compile:
         else:
             raise TypeError("Input type must be symengine.")
 
+
+
+
+if __name__ == "__main__":
+    #テスト用
+    from symbol import symbols_list
+    
+    q = symbols_list([4], 'q{}')
+    
+    # H = (q[0] - 0.5)**2 + (q[1] - 0.5)**2
+    # H = q[0]**3
+    # H = 7 * q[0]**2 * q[1]**3
+    H = q[0] + 2*q[0]**2*q[1]**2 - q[0]*q[1]
+    
+    hobo, offset = Compile(H).get_hobo()
+    
