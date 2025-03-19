@@ -75,7 +75,8 @@ class Compile:
             
             # print(symbols)
             # print(offset)
-            print(f'tensor order = {ho}')
+            if self.verbose > 0:
+                print(f'tensor order = {ho}')
             
             '''
             ステップ2
