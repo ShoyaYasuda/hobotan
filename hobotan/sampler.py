@@ -142,7 +142,12 @@ class MIKASAmpler:
         
         
         # フリップ数リスト（2個まで下がる）
-        flip = np.sort(nr.rand(T_num) ** 2)[::-1]
+        flip = np.sort(nr.rand(T_num) ** 3)[::-1]
+        # import matplotlib.pyplot as plt
+        # plt.figure(figsize=(8, 8))
+        # plt.plot(range(len(flip)), flip, 'ok', markersize=3)
+        # plt.show()
+        # plt.close()
         flip = (flip * max(0, N * 0.5 - 2)).astype(int) + 2
         #print(flip)
         
