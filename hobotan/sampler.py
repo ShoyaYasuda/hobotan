@@ -102,7 +102,7 @@ class MIKASAmpler:
             torch.manual_seed(self.seed)
         
         #
-        shots = max(int(shots), 100)
+        shots = max(int(shots), 1)
         
         
         
@@ -151,7 +151,7 @@ class MIKASAmpler:
         # plt.show()
         # plt.close()
         flip = (flip * max(0, N * 0.5 - 2)).astype(int) + 2
-        #print(flip)
+        # print(flip)
         
         # フリップマスクリスト
         flip_mask = [[1] * flip[0] + [0] * (N - flip[0])]
@@ -167,7 +167,8 @@ class MIKASAmpler:
                 flip_mask.append(tmp)
             flip_mask = np.array(flip_mask, bool)
         flip_mask = torch.tensor(flip_mask).bool()
-        #print(flip_mask.shape)
+        # print(flip_mask.shape)
+        # print(flip_mask)
         
         # 局所探索フリップマスクリスト
         single_flip_mask = torch.eye(N, dtype=bool)
@@ -184,7 +185,7 @@ class MIKASAmpler:
         count = 1
         for fm in flip_mask:
             
-            if self.verbose > 0 and count % (shots//10) == 0:
+            if self.verbose > 0 and count % max(shots//10, 100) == 0:
                 print('.', end='')
                 if count % shots == 0:
                     print(f' {count}/{T_num} min={min(score)} mean={torch.mean(score)}')
@@ -203,11 +204,12 @@ class MIKASAmpler:
             # 更新マスク
             update_mask = score2 < score
             
-            #ランダムにマスクをひっくり返す
-            rate = max(0, 0.2 * (T_num - count) / T_num) # 0.2から下げていく
-            weight = [1 - rate, rate]
-            m = nr.choice([0, 1], shots, p=weight)
-            update_mask[m] = ~update_mask[m]
+            # ランダムに更新マスクをひっくり返す（➝突然変異、悪くなった個体も採用する）
+            # 無駄打ちっぽいので無効にする
+            # rate = max(0, 0.2 * (T_num - count) / T_num) # 0.2から下げていく
+            # weight = [1 - rate, rate]
+            # m = nr.choice([0, 1], shots, p=weight)
+            # update_mask[m == 1] = ~update_mask[m == 1] #20251127修正
     
             # 更新
             pool[update_mask] = pool2[update_mask]
