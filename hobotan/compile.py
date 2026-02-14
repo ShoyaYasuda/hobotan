@@ -1,4 +1,5 @@
 import re
+import sys
 import symengine
 import numpy as np
 from sympy import Rational
